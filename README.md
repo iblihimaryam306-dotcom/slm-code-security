@@ -10,13 +10,12 @@ pour y trouver des failles de sécurité, puis classe ces failles selon la class
 ## Sommaire
 
 1. [Contexte et motivation](#1-contexte-et-motivation)
-2. [Objectifs et questions de recherche](#2-objectifs-et-questions-de-recherche)
+2. [Objectifs](#2-objectifs)
 3. [Méthodologie](#3-méthodologie)
 4. [Les prompts et les failles visées](#4-les-prompts-et-les-failles-visées)
-5. [Les modèles évalués](#5-les-modèles-évalués)
-6. [Résultats](#6-résultats)
-7. [Discussion](#7-discussion)
-8. [Références](#8-références)
+5. [Résultats](#5-résultats)
+6. [Discussion](#6-discussion)
+7. [Références](#7-références)
 
 ---
 
@@ -54,20 +53,12 @@ Ce projet comble ce manque en mesurant la sécurité du code produit par les SLM
 
 ---
 
-## 2. Objectifs et questions de recherche
-
-Objectifs :
+## 2. Objectifs
 
 1. Mesurer à quelle fréquence les SLMs génèrent du code vulnérable.
 2. Identifier les types de failles les plus fréquents.
 3. Étudier l'effet de la taille du modèle sur la sécurité du code.
 4. Évaluer les limites de la détection automatique.
-
-| Question | Énoncé |
-|----|----------|
-| **RQ1** | À quelle fréquence les SLMs produisent-ils du code vulnérable, et quelles failles dominent ? |
-| **RQ2** | Les modèles plus grands produisent-ils du code plus sûr ? |
-| **RQ3** | Quelles catégories de failles un outil d'analyse statique détecte-t-il bien ou mal ? |
 
 ---
 
@@ -126,25 +117,13 @@ données mal protégées, authentification et autorisation. Ils sont rédigés e
 
 ---
 
-## 5. Les modèles évalués
+## 5. Résultats
 
-Les modèles sont issus de l'étude de Hasan et al. (2026), en version Instruct, et répartis selon les mêmes groupes de taille.
+Trois modèles ont été testés, tous issus de l'étude de Hasan et al. (2026), en version Instruct :
+`Qwen2.5-Coder-1.5B-Instruct`, `deepseek-coder-1.3b-instruct` et `Qwen2.5-Coder-7B-Instruct`
+(ce dernier quantifié en 4 bits pour tenir sur le GPU T4 de Google Colab).
 
-| Groupe | Modèle Hugging Face | Exécution | Statut |
-|-----------------|---------------------|--------------------|--------|
-| G1 (≤ 1,5B) | `Qwen/Qwen2.5-Coder-1.5B-Instruct` | float16 | terminé |
-| G1 (≤ 1,5B) | `deepseek-ai/deepseek-coder-1.3b-instruct` | float16 | terminé |
-| G3 (3B – 10B) | `Qwen/Qwen2.5-Coder-7B-Instruct` | quantifié 4 bits | terminé |
-| G2 (1,5B – 3B) | `Qwen/Qwen2.5-Coder-3B-Instruct` | float16 | prévu |
-| G3 (3B – 10B) | `deepseek-ai/deepseek-coder-6.7b-instruct` | quantifié 4 bits | prévu |
-
-Toutes les expériences ont été réalisées sur Google Colab avec un GPU NVIDIA T4.
-
----
-
-## 6. Résultats
-
-### 6.1 Résumé par modèle (40 fichiers par modèle)
+### 5.1 Résumé par modèle (40 fichiers par modèle)
 
 | Modèle | Toutes les alertes | Failles visées | Failles visées graves | Alertes HIGH / MEDIUM / LOW |
 |---|---|---|---|---|
@@ -154,7 +133,7 @@ Toutes les expériences ont été réalisées sur Google Colab avec un GPU NVIDI
 
 ![Fichiers vulnérables par modèle selon les trois niveaux](figures/1_niveaux_vulnerabilite.png)
 
-### 6.2 Fichiers avec au moins une alerte, par prompt (sur 5)
+### 5.2 Fichiers avec au moins une alerte, par prompt (sur 5)
 
 | Prompt | Qwen 1.5B | DeepSeek 1.3B | Qwen 7B |
 |---|---|---|---|
@@ -169,7 +148,7 @@ Toutes les expériences ont été réalisées sur Google Colab avec un GPU NVIDI
 
 ![Fichiers avec au moins une alerte, par prompt](figures/2_heatmap_toutes_alertes.png)
 
-### 6.3 Failles visées graves, par prompt (sur 5)
+### 5.3 Failles visées graves, par prompt (sur 5)
 
 | Prompt | Qwen 1.5B | DeepSeek 1.3B | Qwen 7B | Détail |
 |---|---|---|---|---|
@@ -180,11 +159,11 @@ Toutes les expériences ont été réalisées sur Google Colab avec un GPU NVIDI
 
 ![Fichiers avec une faille visée grave, par prompt](figures/3_heatmap_failles_graves.png)
 
-### 6.4 Alertes par niveau de gravité
+### 5.4 Alertes par niveau de gravité
 
 ![Nombre d'alertes par niveau de gravité](figures/4_alertes_par_gravite.png)
 
-### 6.5 Règles Bandit rencontrées
+### 5.5 Règles Bandit rencontrées
 
 | Règle | Signification | CWE | Gravité | Modèles concernés |
 |-------|---------------|-----|---------|---|
@@ -201,25 +180,24 @@ Toutes les expériences ont été réalisées sur Google Colab avec un GPU NVIDI
 
 ---
 
-## 7. Discussion
+## 6. Discussion
 
-**Le pourcentage brut est trompeur (RQ1).** Selon le décompte de toutes les alertes, Qwen 7B semble moins sûr
-que Qwen 1.5B (67,5 % contre 47,5 %). La différence vient presque entièrement de `debug=True` (B201),
-une habitude présente chez les trois modèles, dans 14 à 20 fichiers sur 40.
+### Comparaison finale des 3 SLMs
 
-**Le plus grand modèle produit le moins de failles graves (RQ2).** Qwen 7B n'a aucune faille visée grave.
-Pour le ping, il n'utilise jamais `shell=True` : ses seules alertes sont B404 et B603, de simples avertissements.
-Dans la famille Qwen, passer de 1,5B à 7B paramètres fait passer les failles graves de 5/40 à 0/40.
+| Critère | Qwen 1.5B | DeepSeek 1.3B | Qwen 7B |
+|---|---|---|---|
+| Taille | 1,5 milliard | 1,3 milliard | 7 milliards |
+| Fichiers avec au moins une alerte | 19/40 | 34/40 | 27/40 |
+| **Failles visées graves** | **5/40** | **6/40** | **0/40** |
+| Injection de commande (`shell=True`, `os.system`) | 5/5 | 3/5 | 0/5 |
+| Injection SQL | 0/5 | 2/5 | 0/5 |
+| `eval` sur des données réseau | 0/5 | 1/5 | 0/5 |
+| Mode debug activé (`debug=True`) | 14/40 | 20/40 | 18/40 |
+| **Classement sécurité** | **2e** | **3e** | **1er** |
 
-**DeepSeek 1.3B produit les failles les plus variées.** Il est le seul à générer une injection SQL,
-un appel à `os.system` et un `eval` sur des données réseau.
+### Conclusion
 
-**Les secrets écrits dans le code sont fréquents.** Les trois modèles placent des mots de passe ou des clés
-secrètes en clair dans le code (B105). Une partie de ces alertes, notamment sur `data_pwd`,
-correspond probablement à des valeurs d'exemple et reste à vérifier manuellement.
-
-**Bandit ne voit pas les failles de logique (RQ3).** Pour `val_path`, `val_upload` et `auth_admin`,
-aucune faille visée n'est détectée, quel que soit le modèle. Ces failles ne viennent pas d'une ligne dangereuse
-mais d'une vérification absente : contrôle du chemin de fichier, de l'extension envoyée, ou des droits de l'utilisateur.
-L'absence d'alerte ne prouve donc pas que le code est sûr. Une analyse complémentaire (Semgrep, règles
-personnalisées, vérification manuelle) est nécessaire.
+Les SLMs produisent régulièrement du code vulnérable, même pour des demandes simples.
+Parmi les trois modèles testés, Qwen2.5-Coder-7B-Instruct est le seul à éviter toutes les failles graves visées.
+Le code généré par un SLM doit donc toujours être relu, et la détection automatique doit être complétée
+par une vérification manuelle des failles de logique.
