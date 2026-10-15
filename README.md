@@ -15,7 +15,6 @@ pour y trouver des failles de sécurité, puis classe ces failles selon la class
 4. [Les prompts et les failles visées](#4-les-prompts-et-les-failles-visées)
 5. [Résultats](#5-résultats)
 6. [Discussion](#6-discussion)
-7. [Références](#7-références)
 
 ---
 
