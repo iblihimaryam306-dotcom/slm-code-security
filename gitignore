@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Modèles téléchargés (trop lourds pour GitHub)
+models/
+*.safetensors
+*.bin
+
+# Secrets (ne jamais publier un token Hugging Face)
+.env
+*token*
